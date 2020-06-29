@@ -2314,10 +2314,10 @@ TransformTAPDetails()
 {
   DATA=$1
   if [ -n "${DATA}" ] && [ "${OUTPUT_DETAILS}" == "detailed" ] ; then
-    ###################################
-    # Transform new lines and colours #
-    ###################################
-    echo "${DATA}" | awk 'BEGIN{RS="\n";ORS="\\n"}1' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"
+    #########################################################
+    # Transform new lines to \\n, remove colours and colons #
+    #########################################################
+    echo "${DATA}" | awk 'BEGIN{RS="\n";ORS="\\n"}1' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" | tr ':' ' '
   fi
 }
 
