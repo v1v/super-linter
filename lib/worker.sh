@@ -506,6 +506,9 @@ function TestCodebase() {
         echo "Please validate the asserts!"
         cat "${TMPFILE}"
         exit 1
+      else
+        # Success
+        echo -e "${NC}${F[B]}Successfully validation in the expected TAP format for ${F[W]}[$LINTER_NAME]${NC}"
       fi
     else
       echo -e "${NC}${F[Y]}WARN!${NC} No TAP expected file found at:[$EXPECTED_FILE]${NC}"
