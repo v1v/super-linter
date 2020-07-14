@@ -497,7 +497,9 @@ function TestCodebase() {
     EXPECTED_FILE="$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/$INDVIDUAL_TEST_FOLDER/reports/expected-${FILE_TYPE}.tap"
     if [ -e "$EXPECTED_FILE" ] ; then
       TMPFILE=$(mktemp -q "/tmp/diff-${FILE_TYPE}.XXXXXX")
-      if diff --exit-code --ignore-all-space  --ignore-space-change --ignore-blank-lines --output "${TMPFILE}" "${EXPECTED_FILE}" "${REPORT_OUTPUT_FILE}" ; then
+
+      ## Ignore white spaces, case sensitive and output only whether files differ
+      if diff -a -w -q -i "${EXPECTED_FILE}" "${REPORT_OUTPUT_FILE}" > "${TMPFILE}" ; then
         #############################################
         # We failed to compare the reporting output #
         #############################################
