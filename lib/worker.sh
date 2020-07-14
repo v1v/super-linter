@@ -306,6 +306,15 @@ function TestCodebase() {
   #################################
   mapfile -t LIST_FILES < <(find "$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/$INDVIDUAL_TEST_FOLDER" -type f -regex "$FILE_EXTENSIONS" ! -path "$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/ansible/ghe-initialize/*" 2>&1)
 
+  ########################################
+  # Prepare context if TAP output format #
+  ########################################
+  if IsTAP ; then
+    TMPFILE=$(mktemp -q "/tmp/super-linter-${FILE_TYPE}.XXXXXX")
+    mkdir -p "${REPORT_OUTPUT_FOLDER}"
+    REPORT_OUTPUT_FILE="${REPORT_OUTPUT_FOLDER}/super-linter-${FILE_TYPE}.${OUTPUT_FORMAT}"
+  fi
+
   ##################
   # Lint the files #
   ##################
@@ -404,6 +413,11 @@ function TestCodebase() {
     ERROR_CODE=$?
 
     ########################################
+    # Increment counter that check was ran #
+    ########################################
+    (("TESTS_RAN++"))
+
+    ########################################
     # Check for if it was supposed to pass #
     ########################################
     if [[ $FILE_STATUS == "good" ]]; then
@@ -419,15 +433,17 @@ function TestCodebase() {
         echo -e "${NC}${B[R]}${F[W]}ERROR:${NC} Linter CMD:[$LINTER_COMMAND $FILE]${NC}"
         # Increment the error count
         (("ERRORS_FOUND_$FILE_TYPE++"))
-        # Increment counter that check was ran
-        ((TESTS_RAN++))
       else
         ###########
         # Success #
         ###########
         echo -e "${NC}${F[B]} - File:${F[W]}[$FILE_NAME]${F[B]} was linted with ${F[W]}[$LINTER_NAME]${F[B]} successfully${NC}"
-        # Increment counter that check was ran
-        ((TESTS_RAN++))
+      fi
+      #######################################################
+      # Store the linting as a temporary file in TAP format #
+      #######################################################
+      if IsTAP ; then
+        echo "ok ${TESTS_RAN} - ${FILE_NAME}" >> "${TMPFILE}"
       fi
     else
       #######################################
@@ -446,18 +462,55 @@ function TestCodebase() {
         echo -e "${NC}${B[R]}${F[W]}ERROR:${NC} Linter CMD:[$LINTER_COMMAND $FILE]${NC}"
         # Increment the error count
         (("ERRORS_FOUND_$FILE_TYPE++"))
-        # Increment counter that check was ran
-        ((TESTS_RAN++))
       else
         ###########
         # Success #
         ###########
         echo -e "${NC}${F[B]} - File:${F[W]}[$FILE_NAME]${F[B]} failed test case with ${F[W]}[$LINTER_NAME]${F[B]} successfully${NC}"
-        # Increment counter that check was ran
-        ((TESTS_RAN++))
+      fi
+      #######################################################
+      # Store the linting as a temporary file in TAP format #
+      #######################################################
+      if IsTAP ; then
+        echo "not ok ${TESTS_RAN} - ${FILE_NAME}" >> "${TMPFILE}"
+        ##########################################
+        # Report the detailed message if enabled #
+        ##########################################
+        DETAILED_MSG=$(TransformTAPDetails "$LINT_CMD")
+        if [ -n "${DETAILED_MSG}" ] ; then
+          printf "  ---\n  message: %s\n  ...\n" "${DETAILED_MSG}" >> "${TMPFILE}"
+        fi
       fi
     fi
   done
+
+  ###########################################################################
+  # Generate report in TAP format and validate with the expected TAP output #
+  ###########################################################################
+  if IsTAP && [ ${TESTS_RAN} -gt 0 ] ; then
+    printf "TAP version 13\n1..%s\n" "${TESTS_RAN}" > "${REPORT_OUTPUT_FILE}"
+    cat "${TMPFILE}" >> "${REPORT_OUTPUT_FILE}"
+
+    ########################################################################
+    # If expected TAP report exists then compare with the generated report #
+    ########################################################################
+    EXPECTED_FILE="$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/$INDVIDUAL_TEST_FOLDER/reports/expected-${FILE_TYPE}.tap"
+    if [ -e "$EXPECTED_FILE" ] ; then
+      TMPFILE=$(mktemp -q "/tmp/diff-${FILE_TYPE}.XXXXXX")
+      if diff --exit-code --ignore-all-space  --ignore-space-change --ignore-blank-lines --output "${TMPFILE}" "${EXPECTED_FILE}" "${REPORT_OUTPUT_FILE}" ; then
+        #############################################
+        # We failed to compare the reporting output #
+        #############################################
+        echo -e "${NC}${B[R]}${F[W]}ERROR!${NC} Failed to assert TAP output:[$LINTER_NAME]${NC}"!
+        echo "Please validate the asserts!"
+        cat "${TMPFILE}"
+        exit 1
+      fi
+    else
+      echo -e "${NC}${F[Y]}WARN!${NC} No TAP expected file found at:[$EXPECTED_FILE]${NC}"
+      echo "skipping report assertions"
+    fi
+  fi
 
   ##############################
   # Validate we ran some tests #
