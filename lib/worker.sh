@@ -304,7 +304,7 @@ function TestCodebase() {
   #################################
   # Get list of all files to lint #
   #################################
-  mapfile -t LIST_FILES < <(find "$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/$INDVIDUAL_TEST_FOLDER" -type f -regex "$FILE_EXTENSIONS" ! -path "$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/ansible/ghe-initialize/*" 2>&1)
+  mapfile -t LIST_FILES < <(find "$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/$INDVIDUAL_TEST_FOLDER" -type f -regex "$FILE_EXTENSIONS" ! -path "$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/ansible/ghe-initialize/*" | sort 2>&1)
 
   ########################################
   # Prepare context if TAP output format #
@@ -497,9 +497,8 @@ function TestCodebase() {
     EXPECTED_FILE="$GITHUB_WORKSPACE/$TEST_CASE_FOLDER/$INDVIDUAL_TEST_FOLDER/reports/expected-${FILE_TYPE}.tap"
     if [ -e "$EXPECTED_FILE" ] ; then
       TMPFILE=$(mktemp -q "/tmp/diff-${FILE_TYPE}.XXXXXX")
-
-      ## Ignore white spaces, case sensitive and output only whether files differ
-      if diff -a -w -q -i "${EXPECTED_FILE}" "${REPORT_OUTPUT_FILE}" > "${TMPFILE}" ; then
+      ## Ignore white spaces, case sensitive
+      if ! diff -a -w -i "${EXPECTED_FILE}" "${REPORT_OUTPUT_FILE}" > "${TMPFILE}" 2>&1; then
         #############################################
         # We failed to compare the reporting output #
         #############################################
