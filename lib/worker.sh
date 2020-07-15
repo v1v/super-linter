@@ -152,6 +152,9 @@ function LintCodebase() {
       elif [[ $FILE == *"$TEST_CASE_FOLDER"* ]]; then
         # This is the test cases, we should always skip
         continue
+      elif [[ $FILE == *".git"* ]]; then
+        # This is likely the .git folder and shouldnt be parsed
+        continue
       fi
 
       ##################################
@@ -556,9 +559,10 @@ function RunTestCases() {
   TestCodebase "JSON" "jsonlint" "jsonlint" ".*\.\(json\)\$" "json"
   TestCodebase "XML" "xmllint" "xmllint" ".*\.\(xml\)\$" "xml"
   TestCodebase "MARKDOWN" "markdownlint" "markdownlint -c $MD_LINTER_RULES" ".*\.\(md\)\$" "markdown"
-  TestCodebase "BASH" "shellcheck" "shellcheck --color" ".*\.\(sh\)\$" "shell"
+  TestCodebase "BASH" "shellcheck" "shellcheck --color" ".*\.\(sh\|bash\|dash\|ksh\)\$" "shell"
   TestCodebase "PYTHON" "pylint" "pylint --rcfile $PYTHON_LINTER_RULES" ".*\.\(py\)\$" "python"
   TestCodebase "PERL" "perl" "perl -Mstrict -cw" ".*\.\(pl\)\$" "perl"
+  TestCodebase "RAKU" "raku" "raku -c" ".*\.\(raku\|rakumod\|rakutest\|pm6\|pl6\|p6\)\$" "raku"
   TestCodebase "PHP" "php" "php -l" ".*\.\(php\)\$" "php"
   TestCodebase "RUBY" "rubocop" "rubocop -c $RUBY_LINTER_RULES" ".*\.\(rb\)\$" "ruby"
   TestCodebase "GO" "golangci-lint" "golangci-lint run -c $GO_LINTER_RULES" ".*\.\(go\)\$" "golang"
@@ -567,7 +571,7 @@ function RunTestCases() {
   TestCodebase "JAVASCRIPT_STANDARD" "standard" "standard $JAVASCRIPT_STANDARD_LINTER_RULES" ".*\.\(js\)\$" "javascript"
   TestCodebase "TYPESCRIPT_ES" "eslint" "eslint --no-eslintrc -c $TYPESCRIPT_LINTER_RULES" ".*\.\(ts\)\$" "typescript"
   TestCodebase "TYPESCRIPT_STANDARD" "standard" "standard --parser @typescript-eslint/parser --plugin @typescript-eslint/eslint-plugin $TYPESCRIPT_STANDARD_LINTER_RULES" ".*\.\(ts\)\$" "typescript"
-  TestCodebase "DOCKER" "/dockerfilelint/bin/dockerfilelint" "/dockerfilelint/bin/dockerfilelint -c $DOCKER_LINTER_RULES" ".*\(Dockerfile\)\$" "docker"
+  TestCodebase "DOCKER" "dockerfilelint" "dockerfilelint -c $DOCKER_LINTER_RULES" ".*\(Dockerfile\)\$" "docker"
   TestCodebase "ANSIBLE" "ansible-lint" "ansible-lint -v -c $ANSIBLE_LINTER_RULES" ".*\.\(yml\|yaml\)\$" "ansible"
   TestCodebase "TERRAFORM" "tflint" "tflint -c $TERRAFORM_LINTER_RULES" ".*\.\(tf\)\$" "terraform"
   TestCodebase "CFN" "cfn-lint" "cfn-lint --config-file $CFN_LINTER_RULES" ".*\.\(json\|yml\|yaml\)\$" "cfn"
@@ -579,6 +583,7 @@ function RunTestCases() {
   TestCodebase "KOTLIN" "ktlint" "ktlint" ".*\.\(kt\|kts\)\$" "kotlin"
   TestCodebase "PROTOBUF" "protolint" "protolint lint --config_path $PROTOBUF_LINTER_RULES" ".*\.\(proto\)\$" "protobuf"
   TestCodebase "OPENAPI" "spectral" "spectral lint -r $OPENAPI_LINTER_RULES" ".*\.\(ymlopenapi\|jsonopenapi\)\$" "openapi"
+  TestCodebase "DART" "dart" "dartanalyzer --fatal-infos  --fatal-warnings --options $DART_LINTER_RULES" ".*\.\(dart\)\$" "dart"
   TestCodebase "HTML" "htmlhint" "htmlhint --config $HTML_LINTER_RULES" ".*\.\(html\)\$" "html"
 
   #################

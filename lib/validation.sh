@@ -52,6 +52,7 @@ function GetValidationInfo() {
   VALIDATE_MD=$(echo "$VALIDATE_MD" | awk '{print tolower($0)}')
   VALIDATE_BASH=$(echo "$VALIDATE_BASH" | awk '{print tolower($0)}')
   VALIDATE_PERL=$(echo "$VALIDATE_PERL" | awk '{print tolower($0)}')
+  VALIDATE_RAKU=$(echo "$VALIDATE_RAKU" | awk '{print tolower($0)}')
   VALIDATE_PHP=$(echo "$VALIDATE_PHP" | awk '{print tolower($0)}')
   VALIDATE_PYTHON=$(echo "$VALIDATE_PYTHON" | awk '{print tolower($0)}')
   VALIDATE_RUBY=$(echo "$VALIDATE_RUBY" | awk '{print tolower($0)}')
@@ -59,6 +60,8 @@ function GetValidationInfo() {
   VALIDATE_ANSIBLE=$(echo "$VALIDATE_ANSIBLE" | awk '{print tolower($0)}')
   VALIDATE_JAVASCRIPT_ES=$(echo "$VALIDATE_JAVASCRIPT_ES" | awk '{print tolower($0)}')
   VALIDATE_JAVASCRIPT_STANDARD=$(echo "$VALIDATE_JAVASCRIPT_STANDARD" | awk '{print tolower($0)}')
+  VALIDATE_JSX=$(echo "$VALIDATE_JSX" | awk '{print tolower($0)}')
+  VALIDATE_TSX=$(echo "$VALIDATE_TSX" | awk '{print tolower($0)}')
   VALIDATE_TYPESCRIPT_ES=$(echo "$VALIDATE_TYPESCRIPT_ES" | awk '{print tolower($0)}')
   VALIDATE_TYPESCRIPT_STANDARD=$(echo "$VALIDATE_TYPESCRIPT_STANDARD" | awk '{print tolower($0)}')
   VALIDATE_DOCKER=$(echo "$VALIDATE_DOCKER" | awk '{print tolower($0)}')
@@ -73,6 +76,7 @@ function GetValidationInfo() {
   VALIDATE_PROTOBUF=$(echo "$VALIDATE_PROTOBUF" | awk '{print tolower($0)}')
   VALIDATE_OPENAPI=$(echo "$VALIDATE_OPENAPI" | awk '{print tolower($0)}')
   VALIDATE_EDITORCONFIG=$(echo "$VALIDATE_EDITORCONFIG" | awk '{print tolower($0)}')
+  VALIDATE_DART=$(echo "$VALIDATE_DART" | awk '{print tolower($0)}')
   VALIDATE_HTML=$(echo "$VALIDATE_HTML" | awk '{print tolower($0)}')
 
   ################################################
@@ -85,6 +89,7 @@ function GetValidationInfo() {
     $VALIDATE_MD || -n \
     $VALIDATE_BASH || -n \
     $VALIDATE_PERL || -n \
+    $VALIDATE_RAKU || -n \
     $VALIDATE_PHP || -n \
     $VALIDATE_PYTHON || -n \
     $VALIDATE_RUBY || -n \
@@ -105,6 +110,7 @@ function GetValidationInfo() {
     $VALIDATE_PROTOBUF || -n \
     $VALIDATE_OPENAPI || -n \
     $VALIDATE_KOTLIN || -n \
+    $VALIDATE_DART || -n \
     $VALIDATE_EDITORCONFIG || -n \
     $VALIDATE_HTML ]]; then
     ANY_SET="true"
@@ -192,6 +198,20 @@ function GetValidationInfo() {
   else
     # No linter flags were set - default all to true
     VALIDATE_PERL="true"
+  fi
+
+  ####################################
+  # Validate if we should check RAKU #
+  ####################################
+  if [[ $ANY_SET == "true" ]]; then
+    # Some linter flags were set - only run those set to true
+    if [[ -z $VALIDATE_RAKU ]]; then
+      # RAKU flag was not set - default to false
+      VALIDATE_RAKU="false"
+    fi
+  else
+    # No linter flags were set - default all to true
+    VALIDATE_RAKU="true"
   fi
 
   ####################################
@@ -290,6 +310,34 @@ function GetValidationInfo() {
   else
     # No linter flags were set - default all to true
     VALIDATE_JAVASCRIPT_STANDARD="true"
+  fi
+
+  #############################################
+  # Validate if we should check JSX           #
+  #############################################
+  if [[ $ANY_SET == "true" ]]; then
+    # Some linter flags were set - only run those set to true
+    if [[ -z $VALIDATE_JSX ]]; then
+      # JSX flag was not set - default to false
+      VALIDATE_JSX="false"
+    fi
+  else
+    # No linter flags were set - default all to true
+    VALIDATE_JSX="true"
+  fi
+
+  #############################################
+  # Validate if we should check TSX           #
+  #############################################
+  if [[ $ANY_SET == "true" ]]; then
+    # Some linter flags were set - only run those set to true
+    if [[ -z $VALIDATE_TSX ]]; then
+      # TSX flag was not set - default to false
+      VALIDATE_TSX="false"
+    fi
+  else
+    # No linter flags were set - default all to true
+    VALIDATE_TSX="true"
   fi
 
   #############################################
@@ -432,6 +480,20 @@ function GetValidationInfo() {
     VALIDATE_KOTLIN="true"
   fi
 
+  ####################################
+  # Validate if we should check DART #
+  ####################################
+  if [[ $ANY_SET == "true" ]]; then
+    # Some linter flags were set - only run those set to true
+    if [[ -z $VALIDATE_DART ]]; then
+      # ENV flag was not set - default to false
+      VALIDATE_DART="false"
+    fi
+  else
+    # No linter flags were set - default all to true
+    VALIDATE_DART="true"
+  fi
+
   #######################################
   # Validate if we should check OPENAPI #
   #######################################
@@ -484,10 +546,13 @@ function GetValidationInfo() {
       VALIDATE_EDITORCONFIG="false"
     fi
   else
-    # No linter flags were set - default all to true
-    VALIDATE_EDITORCONFIG="true"
+    # No linter flags were set
+    # special case checking for .editorconfig
+    if [ -f "$GITHUB_WORKSPACE/.editorconfig" ]; then
+      VALIDATE_EDITORCONFIG="true"
+    fi
   fi
-  
+
   ####################################
   # Validate if we should check HTML #
   ####################################
@@ -534,6 +599,11 @@ function GetValidationInfo() {
     PRINT_ARRAY+=("- Validating [PERL] files in code base...")
   else
     PRINT_ARRAY+=("- Excluding [PERL] files in code base...")
+  fi
+  if [[ $VALIDATE_RAKU == "true" ]]; then
+    PRINT_ARRAY+=("- Validating [RAKU] files in code base...")
+  else
+    PRINT_ARRAY+=("- Excluding [RAKU] files in code base...")
   fi
   if [[ $VALIDATE_PHP == "true" ]]; then
     PRINT_ARRAY+=("- Validating [PHP] files in code base...")
@@ -634,6 +704,11 @@ function GetValidationInfo() {
     PRINT_ARRAY+=("- Validating [PROTOBUF] files in code base...")
   else
     PRINT_ARRAY+=("- Excluding [PROTOBUF] files in code base...")
+  fi
+  if [[ $VALIDATE_DART == "true" ]]; then
+    PRINT_ARRAY+=("- Validating [DART] files in code base...")
+  else
+    PRINT_ARRAY+=("- Excluding [DART] files in code base...")
   fi
   if [[ $VALIDATE_EDITORCONFIG == "true" ]]; then
     PRINT_ARRAY+=("- Validating [EDITORCONFIG] files in code base...")
