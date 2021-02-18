@@ -13,7 +13,7 @@ FROM mstruebing/editorconfig-checker:2.3.3 as editorconfig-checker
 FROM golangci/golangci-lint:v1.37.0 as golangci-lint
 FROM yoheimuta/protolint:v0.28.2 as protolint
 FROM koalaman/shellcheck:v0.7.1 as shellcheck
-FROM wata727/tflint:0.20.3 as tflint
+FROM wata727/tflint:0.24.1 as tflint
 FROM accurics/terrascan:latest as terrascan
 FROM hadolint/hadolint:latest-alpine as dockerfile-lint
 FROM assignuser/lintr-lib:v0.1.2 as lintr-lib
